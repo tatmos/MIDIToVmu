@@ -7,6 +7,7 @@
 ;
 ; A=replay / B=stop / MODE=exit  (auto-plays on start)
 ; Pitches play 1 octave down (VMU timer quantization).
+; LCD: play/idle screens + bottom pitch bar per note.
 ; Pair count: 13
 ; =============================================================================
 
@@ -41,7 +42,6 @@ t1lr_v	EQU	$31
 t1lc_v	EQU	$32
 dur_lo	EQU	$33
 stop_f	EQU	$35
-note_n	EQU	$36
 
 	.org	0
 	jmpf	Start
@@ -101,7 +101,6 @@ Start:
 	mov	#>scr_play, TRH
 	call	SetScr
 	mov	#0, stop_f
-	mov	#0, note_n
 	mov	#<vmu_melody, TRL
 	mov	#>vmu_melody, TRH
 	call	PlayMelody
@@ -124,7 +123,6 @@ WaitARelease:
 	mov	#>scr_play, TRH
 	call	SetScr
 	mov	#0, stop_f
-	mov	#0, note_n
 	mov	#<vmu_melody, TRL
 	mov	#>vmu_melody, TRH
 	call	PlayMelody
@@ -173,7 +171,7 @@ NextNote:
 	br	StopPlay
 
 DoNote:
-	inc	note_n
+	call	PitchHud
 
 	ld	t1lr_v
 	bnz	BeepOn
@@ -250,7 +248,8 @@ SetScr:
 	pop	ACC
 	ret
 
-LcdNoteHud:
+; 画面最下行にピッチバー（幅 = 音の高さ）。休符は点だけ。
+PitchHud:
 	push	ACC
 	push	B
 	push	2
@@ -258,40 +257,43 @@ LcdNoteHud:
 	mov	#1, XBNK
 	mov	#$F0, 2
 	mov	#6, B
-.HudClr:
+.PClr:
 	mov	#0, @R2
 	inc	2
 	dec	B
 	ld	B
-	bnz	.HudClr
+	bnz	.PClr
 	ld	t1lr_v
-	bnz	.HudBeep
+	bnz	.PTone
 	mov	#$F0, 2
-	mov	#$18, @R2
-	br	.HudDone
-.HudBeep:
+	mov	#$80, @R2
+	br	.PDone
+.PTone:
+	; T1LR が高いほど高音 → バーを長く（1..6）
 	ld	t1lr_v
-	ror
 	ror
 	ror
 	ror
 	ror
 	and	#7
-	bnz	.HudW
+	bnz	.PLen
 	mov	#1, ACC
-.HudW:
+.PLen:
+	be	#7, .PCap
+	br	.POk
+.PCap:
+	mov	#6, ACC
+.POk:
 	st	B
 	mov	#$F0, 2
-.HudFill:
+.PFill:
 	mov	#$FF, @R2
 	inc	2
 	dec	B
 	ld	B
-	bnz	.HudFill
-.HudDone:
+	bnz	.PFill
+.PDone:
 	mov	#0, XBNK
-	ld	note_n
-	st	$180
 	pop	XBNK
 	pop	2
 	pop	B
@@ -331,16 +333,16 @@ scr_idle:
 	.byte	$00, $00, $00, $01, $80, $00, $00, $00
 	.byte	$00, $01, $80, $00, $00, $00, $00, $01
 	.byte	$80, $00, $00, $00, $00, $01, $80, $00
-	.byte	$00, $00, $00, $01, $80, $00, $20, $00
-	.byte	$00, $01, $80, $00, $30, $00, $00, $01
-	.byte	$80, $00, $38, $00, $00, $01, $80, $00
-	.byte	$3C, $00, $00, $01, $80, $00, $3E, $00
-	.byte	$00, $01, $80, $00, $3F, $00, $00, $01
-	.byte	$80, $00, $3F, $80, $00, $01, $80, $00
-	.byte	$3F, $C0, $00, $01, $80, $00, $3F, $E0
-	.byte	$00, $01, $80, $00, $3F, $F0, $00, $01
-	.byte	$80, $00, $3F, $F8, $00, $01, $80, $00
-	.byte	$3F, $FC, $00, $01, $80, $00, $00, $00
+	.byte	$00, $00, $00, $01, $80, $00, $00, $00
+	.byte	$00, $01, $80, $00, $08, $00, $00, $01
+	.byte	$80, $00, $08, $00, $00, $01, $80, $00
+	.byte	$0C, $00, $00, $01, $80, $00, $0C, $00
+	.byte	$00, $01, $80, $00, $0E, $00, $00, $01
+	.byte	$80, $00, $0E, $00, $00, $01, $80, $00
+	.byte	$0F, $00, $00, $01, $80, $00, $0F, $00
+	.byte	$00, $01, $80, $00, $0F, $80, $00, $01
+	.byte	$80, $00, $0F, $80, $00, $01, $80, $00
+	.byte	$00, $00, $00, $01, $80, $00, $00, $00
 	.byte	$00, $01, $80, $00, $00, $00, $00, $01
 	.byte	$80, $00, $00, $00, $00, $01, $80, $00
 	.byte	$00, $00, $00, $01, $80, $00, $00, $00
@@ -357,21 +359,21 @@ scr_play:
 	.byte	$00, $00, $00, $01, $80, $00, $00, $00
 	.byte	$00, $01, $80, $00, $00, $00, $00, $01
 	.byte	$80, $00, $00, $00, $00, $01, $80, $00
-	.byte	$00, $00, $00, $71, $80, $00, $00, $00
-	.byte	$00, $71, $80, $00, $07, $00, $00, $71
-	.byte	$80, $00, $07, $00, $00, $71, $80, $00
-	.byte	$07, $01, $C0, $71, $80, $00, $07, $01
-	.byte	$C0, $71, $80, $1C, $07, $01, $C0, $71
-	.byte	$80, $1C, $07, $01, $C0, $71, $80, $1C
-	.byte	$07, $01, $CE, $71, $80, $1C, $07, $01
-	.byte	$CE, $71, $80, $1C, $E7, $01, $CE, $71
-	.byte	$80, $1C, $E7, $01, $CE, $71, $80, $1C
-	.byte	$E7, $39, $CE, $71, $80, $1C, $E7, $39
-	.byte	$CE, $71, $83, $9C, $E7, $39, $CE, $71
-	.byte	$83, $9C, $E7, $39, $CE, $71, $83, $9C
-	.byte	$E7, $39, $CE, $71, $83, $9C, $E7, $39
-	.byte	$CE, $71, $83, $9C, $E7, $39, $CE, $71
-	.byte	$83, $9C, $E7, $39, $CE, $71, $80, $00
+	.byte	$00, $00, $00, $01, $80, $00, $00, $00
+	.byte	$00, $01, $80, $00, $00, $00, $03, $01
+	.byte	$80, $00, $00, $00, $03, $01, $80, $00
+	.byte	$30, $00, $03, $01, $80, $00, $30, $00
+	.byte	$03, $01, $80, $00, $30, $00, $03, $01
+	.byte	$80, $00, $30, $00, $03, $01, $80, $00
+	.byte	$30, $0C, $03, $01, $80, $00, $30, $0C
+	.byte	$03, $01, $80, $C0, $30, $0C, $03, $01
+	.byte	$80, $C0, $30, $0C, $03, $01, $80, $C0
+	.byte	$30, $0C, $03, $01, $80, $C0, $30, $0C
+	.byte	$03, $01, $80, $C0, $30, $0C, $03, $01
+	.byte	$80, $C0, $30, $0C, $03, $01, $80, $C0
+	.byte	$30, $0C, $03, $01, $80, $C0, $30, $0C
+	.byte	$03, $01, $80, $00, $00, $00, $00, $01
+	.byte	$80, $00, $00, $00, $00, $01, $80, $00
 	.byte	$00, $00, $00, $01, $80, $00, $00, $00
 	.byte	$00, $01, $FF, $FF, $FF, $FF, $FF, $FF
 

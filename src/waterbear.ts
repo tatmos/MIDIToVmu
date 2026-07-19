@@ -138,6 +138,7 @@ function bitmapToAsm(label: string, bytes: number[]): string {
 }
 
 function idleBitmap(): number[] {
+  // 枠 + 再生マーク（▶）
   return makeBitmap((set) => {
     for (let x = 0; x < 48; x++) {
       set(x, 0)
@@ -147,15 +148,16 @@ function idleBitmap(): number[] {
       set(0, y)
       set(47, y)
     }
-    for (let y = 0; y < 12; y++) {
-      for (let x = 0; x <= y; x++) {
-        set(18 + x, 10 + y)
+    for (let y = 0; y < 10; y++) {
+      for (let x = 0; x <= Math.floor(y / 2); x++) {
+        set(20 + x, 11 + y)
       }
     }
   })
 }
 
 function playBitmap(): number[] {
+  // 枠 + 静的な簡易バー（装飾）。ノート連動は下部 PitchHud
   return makeBitmap((set) => {
     for (let x = 0; x < 48; x++) {
       set(x, 0)
@@ -165,13 +167,12 @@ function playBitmap(): number[] {
       set(0, y)
       set(47, y)
     }
-    const heights = [6, 14, 10, 18, 8, 16, 12, 20]
+    const heights = [8, 14, 10, 16]
     for (let i = 0; i < heights.length; i++) {
-      const x0 = 6 + i * 5
+      const x0 = 8 + i * 10
       for (let y = 0; y < heights[i]; y++) {
-        set(x0, 28 - y)
-        set(x0 + 1, 28 - y)
-        set(x0 + 2, 28 - y)
+        set(x0, 26 - y)
+        set(x0 + 1, 26 - y)
       }
     }
   })
@@ -204,6 +205,7 @@ export function melodyToWaterbearSource(
 ;
 ; A=replay / B=stop / MODE=exit  (auto-plays on start)
 ; Pitches play 1 octave down (VMU timer quantization).
+; LCD: play/idle screens + bottom pitch bar per note.
 ; Pair count: ${notes.length}
 ; =============================================================================
 
@@ -238,7 +240,6 @@ t1lr_v	EQU	$31
 t1lc_v	EQU	$32
 dur_lo	EQU	$33
 stop_f	EQU	$35
-note_n	EQU	$36
 
 	.org	0
 	jmpf	Start
@@ -298,7 +299,6 @@ Start:
 	mov	#>scr_play, TRH
 	call	SetScr
 	mov	#0, stop_f
-	mov	#0, note_n
 	mov	#<${safeLabel}, TRL
 	mov	#>${safeLabel}, TRH
 	call	PlayMelody
@@ -321,7 +321,6 @@ WaitARelease:
 	mov	#>scr_play, TRH
 	call	SetScr
 	mov	#0, stop_f
-	mov	#0, note_n
 	mov	#<${safeLabel}, TRL
 	mov	#>${safeLabel}, TRH
 	call	PlayMelody
@@ -370,7 +369,7 @@ NextNote:
 	br	StopPlay
 
 DoNote:
-	inc	note_n
+	call	PitchHud
 
 	ld	t1lr_v
 	bnz	BeepOn
@@ -447,7 +446,8 @@ SetScr:
 	pop	ACC
 	ret
 
-LcdNoteHud:
+; 画面最下行にピッチバー（幅 = 音の高さ）。休符は点だけ。
+PitchHud:
 	push	ACC
 	push	B
 	push	2
@@ -455,40 +455,43 @@ LcdNoteHud:
 	mov	#1, XBNK
 	mov	#$F0, 2
 	mov	#6, B
-.HudClr:
+.PClr:
 	mov	#0, @R2
 	inc	2
 	dec	B
 	ld	B
-	bnz	.HudClr
+	bnz	.PClr
 	ld	t1lr_v
-	bnz	.HudBeep
+	bnz	.PTone
 	mov	#$F0, 2
-	mov	#$18, @R2
-	br	.HudDone
-.HudBeep:
+	mov	#$80, @R2
+	br	.PDone
+.PTone:
+	; T1LR が高いほど高音 → バーを長く（1..6）
 	ld	t1lr_v
-	ror
 	ror
 	ror
 	ror
 	ror
 	and	#7
-	bnz	.HudW
+	bnz	.PLen
 	mov	#1, ACC
-.HudW:
+.PLen:
+	be	#7, .PCap
+	br	.POk
+.PCap:
+	mov	#6, ACC
+.POk:
 	st	B
 	mov	#$F0, 2
-.HudFill:
+.PFill:
 	mov	#$FF, @R2
 	inc	2
 	dec	B
 	ld	B
-	bnz	.HudFill
-.HudDone:
+	bnz	.PFill
+.PDone:
 	mov	#0, XBNK
-	ld	note_n
-	st	$180
 	pop	XBNK
 	pop	2
 	pop	B

@@ -25,7 +25,8 @@ waterbear assemble vmu_melody.s -o vmu_melody.vms
 - **A** … 再再生
 - **B** … 停止
 - **MODE** … BIOS に戻る
-- 再生中は LCD にイコライザ風の画面＋ピッチバーを表示
+- 再生中は簡易イコライザ画面、最下行のピッチバーがノートに合わせて変化
+- 停止中は ▶ の待機画面
 
 ## ビルド
 
@@ -44,3 +45,9 @@ npm run build
 公開 URL: https://tatmos.github.io/MIDIToVmu/
 
 初回のみリポジトリの **Settings → Pages → Source** を **GitHub Actions** に設定してください。
+
+## Dreamcast 本体から鳴らす（KallistiOS）
+
+C 配列を DC ゲーム側で `vmu_beep_waveform` ループ再生する例:
+
+`examples/kos-vmu-melody/`（[解説記事と同じ系統](https://massie0414.com/index.php/retro_game_production/dreamcast/15211/)）
