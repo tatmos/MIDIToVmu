@@ -235,12 +235,48 @@ pre {
   white-space: pre;
 }
 
-.hidden {
-  display: none !important;
+.usage-hint {
+  margin: 0 0 0.75rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.usage-hint p {
+  margin: 0.35rem 0 0;
+}
+
+.usage-hint p:first-child {
+  margin-top: 0;
+}
+
+.usage-hint strong {
+  color: var(--ink);
+}
+
+.usage-hint a {
+  color: var(--accent);
+}
+
+.usage-hint .inline-cmd {
+  margin: 0.5rem 0;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.8rem;
 }
 
 footer {
   margin-top: 2rem;
   font-size: 0.8rem;
   color: var(--muted);
+}
+
+footer a {
+  color: var(--accent);
+}
+
+.hidden {
+  display: none !important;
 }

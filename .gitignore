@@ -12,6 +12,13 @@ dist
 dist-ssr
 *.local
 
+# Local waterbear toolchain / build artifacts
+tools/waterbear.exe
+tools/*.vms
+tools/test_player.s
+tools/nandodemo.s
+tools/gen-sample.mts
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -1,9 +1,14 @@
-import { Midi } from '@tonejs/midi'
+import MidiPkg from '@tonejs/midi'
+
+const { Midi } = MidiPkg as { Midi: typeof import('@tonejs/midi').Midi }
+type Midi = InstanceType<typeof Midi>
 
 export type MelodyPair = {
   freq: number
   durationMs: number
   comment: string
+  /** MIDI ノート番号。休符は 0。waterbear の T1LR 変換用 */
+  midi?: number
 }
 
 export type TrackInfo = {
@@ -67,6 +72,7 @@ export function notesToMelodyPairs(
           freq: 0,
           durationMs: restMs,
           comment: `休符 を${restMs}ms`,
+          midi: 0,
         })
       }
     }
@@ -89,6 +95,7 @@ export function notesToMelodyPairs(
       freq,
       durationMs,
       comment: `${noteLabel(note.midi)} を${durationMs}ms`,
+      midi: note.midi,
     })
     cursor = end
   }

@@ -1,0 +1,757 @@
+
+  ;; Entry point
+  .org 0
+  jmpf  label_0280
+
+  ;; Entry point
+  .org $0003
+  reti
+
+  ;; Entry point
+  .org $000B
+  reti
+
+  ;; Entry point
+  .org $0013
+  reti
+
+  ;; Entry point
+  .org $001B
+  reti
+
+  ;; Entry point
+  .org $0023
+  reti
+
+  ;; Entry point
+  .org $002B
+  reti
+
+  ;; Entry point
+  .org $0033
+  reti
+
+  ;; Entry point
+  .org $003B
+  reti
+
+  ;; Entry point
+  .org $0043
+  reti
+
+  ;; Entry point
+  .org $004B
+  reti
+
+  ;; Entry point
+  .org $0130
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+label_01F0:
+  not1  ext, $00
+  jmpf  $01F0
+
+  .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$4D,$49,$44,$49,$54 ; ...........MIDIT
+  .byte $6F,$56,$4D,$55,$20,$20,$20,$20,$20,$20,$20,$41,$3A,$50,$6C,$61 ; oVMU       A:Pla
+  .byte $79,$20,$42,$3A,$53,$74,$6F,$70,$20,$4D,$4F,$44,$45,$3A,$45,$78 ; y B:Stop MODE:Ex
+  .byte $69,$74,$20,$20,$20,$20,$20,$20,$20,$20,$20,$00,$00,$00,$00,$00 ; it         .....
+
+  .org $0280
+label_0280:
+  mov   #$7F, sp
+  mov   #$00, ie
+  mov   #$80, vccr
+  mov   #$09, mcr
+  mov   #$81, ocr
+  mov   #$00, p3int
+  mov   #$80, p1fcr
+  clr1  p1, $07
+  mov   #$80, p1ddr
+  call  label_02F4
+  mov   #$D5, trl
+  mov   #$04, trh
+  call  label_0360
+  mov   #$00, $25
+  mov   #$00, $26
+  mov   #$95, trl
+  mov   #$05, trh
+  call  label_02F8
+  call  label_02F4
+  mov   #$15, trl
+  mov   #$04, trh
+  call  label_0360
+label_02BC:
+  call  label_02F4
+  ld    p3
+  bn    acc, $06, label_02EF
+  bn    acc, $04, label_02C8
+  br    label_02BC
+label_02C8:
+  ld    p3
+  bn    acc, $04, label_02C8
+  mov   #$D5, trl
+  mov   #$04, trh
+  call  label_0360
+  mov   #$00, $25
+  mov   #$00, $26
+  mov   #$95, trl
+  mov   #$05, trh
+  call  label_02F8
+  call  label_02F4
+  mov   #$15, trl
+  mov   #$04, trh
+  call  label_0360
+  br    label_02BC
+label_02EF:
+  call  label_02F4
+  jmpf  label_01F0
+label_02F4:
+  mov   #$10, t1cnt
+  ret
+label_02F8:
+  mov   #$00, $20
+label_02FB:
+  ld    p3
+  bn    acc, $05, label_035A
+  ld    $20
+  ldc
+  st    $21
+  inc   $20
+  ld    $20
+  ldc
+  st    $22
+  inc   $20
+  ld    $20
+  ldc
+  st    $23
+  inc   $20
+  inc   $20
+  ld    $21
+  or    $22
+  or    $23
+  bnz   label_0321
+  br    label_035A
+label_0321:
+  call  label_039B
+  inc   $26
+  ld    $21
+  bnz   label_032D
+  call  label_02F4
+  br    label_033B
+label_032D:
+  mov   #$10, t1cnt
+  ld    $21
+  st    t1lr
+  ld    $22
+  st    t1lc
+  mov   #$50, t1cnt
+label_033B:
+  ld    p3
+  bn    acc, $05, label_035A
+  ld    $25
+  bnz   label_035A
+  ld    $23
+  bz    label_0352
+  call  label_03EF
+  ld    $23
+  sub   #$01
+  st    $23
+  br    label_033B
+label_0352:
+  call  label_02F4
+  call  label_03EF
+  call  label_03EF
+  br    label_02FB
+label_035A:
+  mov   #$01, $25
+  call  label_02F4
+  ret
+label_0360:
+  push  acc
+  push  xbnk
+  push  c
+  push  $02
+  mov   #$80, $02
+  xor   acc
+  st    xbnk
+  st    c
+label_0371:
+  ld    c
+  ldc
+  st    @R2
+  inc   $02
+  inc   c
+  ld    $02
+  and   #$0F
+  bne   #$0C, label_038D
+  ld    $02
+  add   #$04
+  st    $02
+  bnz   label_038D
+  inc   xbnk
+  mov   #$80, $02
+label_038D:
+  ld    c
+  bne   #$C0, label_0371
+  pop   $02
+  pop   c
+  pop   xbnk
+  pop   acc
+  ret
+label_039B:
+  push  acc
+  push  b
+  push  $02
+  push  xbnk
+  mov   #$01, xbnk
+  mov   #$F0, $02
+  mov   #$06, b
+label_03AC:
+  mov   #$00, @R2
+  inc   $02
+  dec   b
+  ld    b
+  bnz   label_03AC
+  ld    $21
+  bnz   label_03C1
+  mov   #$F0, $02
+  mov   #$18, @R2
+  br    label_03DF
+label_03C1:
+  mov   #$00, acc
+  sub   $21
+  ror
+  ror
+  ror
+  and   #$07
+  bnz   label_03D0
+  mov   #$01, acc
+label_03D0:
+  st    b
+  mov   #$F0, $02
+label_03D5:
+  mov   #$FF, @R2
+  inc   $02
+  dec   b
+  ld    b
+  bnz   label_03D5
+label_03DF:
+  mov   #$00, xbnk
+  ld    $26
+  st    xram
+  pop   xbnk
+  pop   $02
+  pop   b
+  pop   acc
+  ret
+label_03EF:
+  push  acc
+  push  b
+  mov   #$08, acc
+label_03F6:
+  ld    p3
+  bn    acc, $05, label_040D
+  mov   #$3C, b
+label_03FE:
+  dec   b
+  ld    b
+  bnz   label_03FE
+  dec   acc
+  bnz   label_03F6
+  pop   b
+  pop   acc
+  ret
+label_040D:
+  mov   #$01, $25
+  pop   b
+  pop   acc
+  ret
+
+  .byte $FF,$FF,$FF,$FF,$FF,$FF,$80,$00,$00,$00,$00,$01,$80,$00,$00,$00
+  .byte $00,$01,$80,$00,$00,$00,$00,$01,$80,$00,$00,$00,$00,$01,$80,$00
+  .byte $00,$00,$00,$01,$80,$00,$00,$00,$00,$01,$80,$00,$00,$00,$00,$01
+  .byte $80,$00,$00,$00,$00,$01,$80,$00,$00,$00,$00,$01,$80,$00,$20,$00 ; .............. .
+  .byte $00,$01,$80,$00,$30,$00,$00,$01,$80,$00,$38,$00,$00,$01,$80,$00 ; ....0.....8.....
+  .byte $3C,$00,$00,$01,$80,$00,$3E,$00,$00,$01,$80,$00,$3F,$00,$00,$01 ; <.....>.....?...
+  .byte $80,$00,$3F,$80,$00,$01,$80,$00,$3F,$C0,$00,$01,$80,$00,$3F,$E0 ; ..?.....?.....?.
+  .byte $00,$01,$80,$00,$3F,$F0,$00,$01,$80,$00,$3F,$F8,$00,$01,$80,$00 ; ....?.....?.....
+  .byte $3F,$FC,$00,$01,$80,$00,$00,$00,$00,$01,$80,$00,$00,$00,$00,$01 ; ?...............
+  .byte $80,$00,$00,$00,$00,$01,$80,$00,$00,$00,$00,$01,$80,$00,$00,$00
+  .byte $00,$01,$80,$00,$00,$00,$00,$01,$80,$00,$00,$00,$00,$01,$80,$00
+  .byte $00,$00,$00,$01,$80,$00,$00,$00,$00,$01,$FF,$FF,$FF,$FF,$FF,$FF
+  .byte $FF,$FF,$FF,$FF,$FF,$FF,$80,$00,$00,$00,$00,$01,$80,$00,$00,$00
+  .byte $00,$01,$80,$00,$00,$00,$00,$01,$80,$00,$00,$00,$00,$01,$80,$00
+  .byte $00,$00,$00,$01,$80,$00,$00,$00,$00,$01,$80,$00,$00,$00,$00,$01
+  .byte $80,$00,$00,$00,$00,$01,$80,$00,$00,$00,$00,$71,$80,$00,$00,$00 ; ...........q....
+  .byte $00,$71,$80,$00,$07,$00,$00,$71,$80,$00,$07,$00,$00,$71,$80,$00 ; .q.....q.....q..
+  .byte $07,$01,$C0,$71,$80,$00,$07,$01,$C0,$71,$80,$1C,$07,$01,$C0,$71 ; ...q.....q.....q
+  .byte $80,$1C,$07,$01,$C0,$71,$80,$1C,$07,$01,$CE,$71,$80,$1C,$07,$01 ; .....q.....q....
+  .byte $CE,$71,$80,$1C,$E7,$01,$CE,$71,$80,$1C,$E7,$01,$CE,$71,$80,$1C ; .q.....q.....q..
+  .byte $E7,$39,$CE,$71,$80,$1C,$E7,$39,$CE,$71,$83,$9C,$E7,$39,$CE,$71 ; .9.q...9.q...9.q
+  .byte $83,$9C,$E7,$39,$CE,$71,$83,$9C,$E7,$39,$CE,$71,$83,$9C,$E7,$39 ; ...9.q...9.q...9
+  .byte $CE,$71,$83,$9C,$E7,$39,$CE,$71,$83,$9C,$E7,$39,$CE,$71,$80,$00 ; .q...9.q...9.q..
+  .byte $00,$00,$00,$01,$80,$00,$00,$00,$00,$01,$FF,$FF,$FF,$FF,$FF,$FF
+  .byte $F8,$FB,$0D,$00,$F9,$FC,$0D,$00,$FA,$FC,$0D,$00,$FB,$FD,$19,$00
+  .byte $00,$00,$0D,$00,$F8,$FB,$0D,$00,$F8,$FB,$0D,$00,$00,$00,$0D,$00
+  .byte $F8,$FB,$0D,$00,$F9,$FC,$19,$00,$FB,$FD,$0D,$00,$00,$00,$0D,$00
+  .byte $FB,$FD,$32,$00,$00,$00,$00,$00 ; ..2.....
+
+  ;; Pad size of binary
+  .cnop $01CD, $0200
+
+  ;; PSW bits
+p EQU $00
+rambk0 EQU $01
+ov EQU $02
+irbk0 EQU $03
+irbk1 EQU $04
+ac EQU $06
+cy EQU $07
+
+  ;; Special Function Registers
+acc EQU $0100
+psw EQU $0101
+b EQU $0102
+c EQU $0103
+trl EQU $0104
+trh EQU $0105
+sp EQU $0106
+pcon EQU $0107
+ie EQU $0108
+ip EQU $0109
+sfr_010a EQU $010A
+sfr_010b EQU $010B
+sfr_010c EQU $010C
+ext EQU $010D
+ocr EQU $010E
+sfr_010f EQU $010F
+t0con EQU $0110
+t0prr EQU $0111
+t0l EQU $0112
+t0lr EQU $0113
+t0h EQU $0114
+t0hr EQU $0115
+sfr_0116 EQU $0116
+sfr_0117 EQU $0117
+t1cnt EQU $0118
+sfr_0119 EQU $0119
+t1lc EQU $011A
+t1lr EQU $011B
+t1hc EQU $011C
+t1hr EQU $011D
+sfr_011e EQU $011E
+sfr_011f EQU $011F
+mcr EQU $0120
+sfr_0121 EQU $0121
+stad EQU $0122
+cnr EQU $0123
+tdr EQU $0124
+xbnk EQU $0125
+sfr_0126 EQU $0126
+vccr EQU $0127
+sfr_0128 EQU $0128
+sfr_0129 EQU $0129
+sfr_012a EQU $012A
+sfr_012b EQU $012B
+sfr_012c EQU $012C
+sfr_012d EQU $012D
+sfr_012e EQU $012E
+sfr_012f EQU $012F
+scon0 EQU $0130
+sbuf0 EQU $0131
+sbr EQU $0132
+sfr_0133 EQU $0133
+scon1 EQU $0134
+sbuf1 EQU $0135
+sfr_0136 EQU $0136
+sfr_0137 EQU $0137
+sfr_0138 EQU $0138
+sfr_0139 EQU $0139
+sfr_013a EQU $013A
+sfr_013b EQU $013B
+sfr_013c EQU $013C
+sfr_013d EQU $013D
+sfr_013e EQU $013E
+sfr_013f EQU $013F
+sfr_0140 EQU $0140
+sfr_0141 EQU $0141
+sfr_0142 EQU $0142
+sfr_0143 EQU $0143
+p1 EQU $0144
+p1ddr EQU $0145
+p1fcr EQU $0146
+sfr_0147 EQU $0147
+sfr_0148 EQU $0148
+sfr_0149 EQU $0149
+sfr_014a EQU $014A
+sfr_014b EQU $014B
+p3 EQU $014C
+p3ddr EQU $014D
+p3int EQU $014E
+sfr_014f EQU $014F
+sfr_0150 EQU $0150
+sfr_0151 EQU $0151
+sfr_0152 EQU $0152
+sfr_0153 EQU $0153
+fpr EQU $0154
+sfr_0155 EQU $0155
+sfr_0156 EQU $0156
+sfr_0157 EQU $0157
+sfr_0158 EQU $0158
+sfr_0159 EQU $0159
+sfr_015a EQU $015A
+sfr_015b EQU $015B
+p7 EQU $015C
+i01cr EQU $015D
+i23cr EQU $015E
+isl EQU $015F
+mplsw EQU $0160
+mplsta EQU $0161
+mplrst EQU $0162
+vsel EQU $0163
+vrmad1 EQU $0164
+vrmad2 EQU $0165
+vtrbf EQU $0166
+vlreg EQU $0167
+sfr_0168 EQU $0168
+sfr_0169 EQU $0169
+sfr_016a EQU $016A
+sfr_016b EQU $016B
+sfr_016c EQU $016C
+sfr_016d EQU $016D
+sfr_016e EQU $016E
+sfr_016f EQU $016F
+sfr_0170 EQU $0170
+sfr_0171 EQU $0171
+sfr_0172 EQU $0172
+sfr_0173 EQU $0173
+sfr_0174 EQU $0174
+sfr_0175 EQU $0175
+sfr_0176 EQU $0176
+sfr_0177 EQU $0177
+sfr_0178 EQU $0178
+sfr_0179 EQU $0179
+sfr_017a EQU $017A
+sfr_017b EQU $017B
+sfr_017c EQU $017C
+sfr_017d EQU $017D
+sfr_017e EQU $017E
+btcr EQU $017F
+xram EQU $0180
+xram_0181 EQU $0181
+xram_0182 EQU $0182
+xram_0183 EQU $0183
+xram_0184 EQU $0184
+xram_0185 EQU $0185
+xram_0186 EQU $0186
+xram_0187 EQU $0187
+xram_0188 EQU $0188
+xram_0189 EQU $0189
+xram_018a EQU $018A
+xram_018b EQU $018B
+xram_018c EQU $018C
+xram_018d EQU $018D
+xram_018e EQU $018E
+xram_018f EQU $018F
+xram_0190 EQU $0190
+xram_0191 EQU $0191
+xram_0192 EQU $0192
+xram_0193 EQU $0193
+xram_0194 EQU $0194
+xram_0195 EQU $0195
+xram_0196 EQU $0196
+xram_0197 EQU $0197
+xram_0198 EQU $0198
+xram_0199 EQU $0199
+xram_019a EQU $019A
+xram_019b EQU $019B
+xram_019c EQU $019C
+xram_019d EQU $019D
+xram_019e EQU $019E
+xram_019f EQU $019F
+xram_01a0 EQU $01A0
+xram_01a1 EQU $01A1
+xram_01a2 EQU $01A2
+xram_01a3 EQU $01A3
+xram_01a4 EQU $01A4
+xram_01a5 EQU $01A5
+xram_01a6 EQU $01A6
+xram_01a7 EQU $01A7
+xram_01a8 EQU $01A8
+xram_01a9 EQU $01A9
+xram_01aa EQU $01AA
+xram_01ab EQU $01AB
+xram_01ac EQU $01AC
+xram_01ad EQU $01AD
+xram_01ae EQU $01AE
+xram_01af EQU $01AF
+xram_01b0 EQU $01B0
+xram_01b1 EQU $01B1
+xram_01b2 EQU $01B2
+xram_01b3 EQU $01B3
+xram_01b4 EQU $01B4
+xram_01b5 EQU $01B5
+xram_01b6 EQU $01B6
+xram_01b7 EQU $01B7
+xram_01b8 EQU $01B8
+xram_01b9 EQU $01B9
+xram_01ba EQU $01BA
+xram_01bb EQU $01BB
+xram_01bc EQU $01BC
+xram_01bd EQU $01BD
+xram_01be EQU $01BE
+xram_01bf EQU $01BF
+xram_01c0 EQU $01C0
+xram_01c1 EQU $01C1
+xram_01c2 EQU $01C2
+xram_01c3 EQU $01C3
+xram_01c4 EQU $01C4
+xram_01c5 EQU $01C5
+xram_01c6 EQU $01C6
+xram_01c7 EQU $01C7
+xram_01c8 EQU $01C8
+xram_01c9 EQU $01C9
+xram_01ca EQU $01CA
+xram_01cb EQU $01CB
+xram_01cc EQU $01CC
+xram_01cd EQU $01CD
+xram_01ce EQU $01CE
+xram_01cf EQU $01CF
+xram_01d0 EQU $01D0
+xram_01d1 EQU $01D1
+xram_01d2 EQU $01D2
+xram_01d3 EQU $01D3
+xram_01d4 EQU $01D4
+xram_01d5 EQU $01D5
+xram_01d6 EQU $01D6
+xram_01d7 EQU $01D7
+xram_01d8 EQU $01D8
+xram_01d9 EQU $01D9
+xram_01da EQU $01DA
+xram_01db EQU $01DB
+xram_01dc EQU $01DC
+xram_01dd EQU $01DD
+xram_01de EQU $01DE
+xram_01df EQU $01DF
+xram_01e0 EQU $01E0
+xram_01e1 EQU $01E1
+xram_01e2 EQU $01E2
+xram_01e3 EQU $01E3
+xram_01e4 EQU $01E4
+xram_01e5 EQU $01E5
+xram_01e6 EQU $01E6
+xram_01e7 EQU $01E7
+xram_01e8 EQU $01E8
+xram_01e9 EQU $01E9
+xram_01ea EQU $01EA
+xram_01eb EQU $01EB
+xram_01ec EQU $01EC
+xram_01ed EQU $01ED
+xram_01ee EQU $01EE
+xram_01ef EQU $01EF
+xram_01f0 EQU $01F0
+xram_01f1 EQU $01F1
+xram_01f2 EQU $01F2
+xram_01f3 EQU $01F3
+xram_01f4 EQU $01F4
+xram_01f5 EQU $01F5
+xram_01f6 EQU $01F6
+xram_01f7 EQU $01F7
+xram_01f8 EQU $01F8
+xram_01f9 EQU $01F9
+xram_01fa EQU $01FA
+xram_01fb EQU $01FB
+sfr_01fc EQU $01FC
+sfr_01fd EQU $01FD
+sfr_01fe EQU $01FE
+sfr_01ff EQU $01FF

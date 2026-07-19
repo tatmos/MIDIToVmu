@@ -7,15 +7,18 @@ import {
   type MelodyPair,
   type TrackInfo,
 } from './midiToVmu'
+import { melodyToWaterbearSource } from './waterbear'
 import { MelodyPreview } from './preview'
 import type { Midi } from '@tonejs/midi'
+
+type OutputFormat = 'c' | 'waterbear'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
 
 app.innerHTML = `
   <header>
     <h1>MIDIToVMU</h1>
-    <p>MIDIファイルをVMU用メロディ配列（Cソース）に変換します</p>
+    <p>MIDIファイルをVMU用メロディ（C / waterbear）に変換します</p>
   </header>
 
   <div class="dropzone" id="dropzone">
@@ -35,8 +38,15 @@ app.innerHTML = `
         <select id="track"></select>
       </label>
       <label>
-        配列名
+        配列名 / ラベル
         <input type="text" id="arrayName" value="vmu_melody" spellcheck="false" />
+      </label>
+      <label>
+        出力形式
+        <select id="format">
+          <option value="c">C (uint16_t)</option>
+          <option value="waterbear">waterbear (.s)</option>
+        </select>
       </label>
     </div>
     <p class="meta" id="meta"></p>
@@ -46,19 +56,22 @@ app.innerHTML = `
 
   <div class="hidden" id="outputSection">
     <div class="output-header">
-      <h2>生成コード</h2>
+      <h2 id="outputTitle">生成コード</h2>
       <div class="output-actions">
         <button type="button" id="play" disabled>プレビュー再生</button>
         <button type="button" id="stop" class="secondary" disabled>停止</button>
         <button type="button" id="copy" disabled>コピー</button>
+        <button type="button" id="download" class="secondary" disabled>ファイル保存</button>
       </div>
     </div>
+    <div class="usage-hint hidden" id="usageHint"></div>
     <pre id="output"></pre>
   </div>
 
   <footer>
     単音メロディ想定。重なるノートは開始が早いものを優先し、次のノート開始で打ち切ります。
     プレビューはブラウザ上の矩形波で、実機VMUの音質とは異なります。
+    waterbear: <a href="https://wtetzner.github.io/waterbear" target="_blank" rel="noopener noreferrer">公式ドキュメント</a>
   </footer>
 `
 
@@ -68,11 +81,15 @@ const sampleBtn = document.querySelector<HTMLButtonElement>('#sample')!
 const options = document.querySelector<HTMLDivElement>('#options')!
 const trackSelect = document.querySelector<HTMLSelectElement>('#track')!
 const arrayNameInput = document.querySelector<HTMLInputElement>('#arrayName')!
+const formatSelect = document.querySelector<HTMLSelectElement>('#format')!
 const meta = document.querySelector<HTMLParagraphElement>('#meta')!
 const errorEl = document.querySelector<HTMLDivElement>('#error')!
 const outputSection = document.querySelector<HTMLDivElement>('#outputSection')!
+const outputTitle = document.querySelector<HTMLHeadingElement>('#outputTitle')!
 const output = document.querySelector<HTMLPreElement>('#output')!
+const usageHint = document.querySelector<HTMLDivElement>('#usageHint')!
 const copyBtn = document.querySelector<HTMLButtonElement>('#copy')!
+const downloadBtn = document.querySelector<HTMLButtonElement>('#download')!
 const playBtn = document.querySelector<HTMLButtonElement>('#play')!
 const stopBtn = document.querySelector<HTMLButtonElement>('#stop')!
 
@@ -99,6 +116,10 @@ function setPlayingUi(playing: boolean) {
   stopBtn.disabled = !playing
 }
 
+function currentFormat(): OutputFormat {
+  return formatSelect.value === 'waterbear' ? 'waterbear' : 'c'
+}
+
 function regenerate() {
   if (!currentMidi || tracks.length === 0) return
 
@@ -108,11 +129,39 @@ function regenerate() {
   const trackIndex = Number(trackSelect.value)
   const arrayName = sanitizeArrayName(arrayNameInput.value)
   currentPairs = convertTrack(currentMidi, trackIndex)
-  const code = melodyToCSource(currentPairs, arrayName)
 
+  const format = currentFormat()
+  const code =
+    format === 'waterbear'
+      ? melodyToWaterbearSource(currentPairs, arrayName)
+      : melodyToCSource(currentPairs, arrayName)
+
+  outputTitle.textContent =
+    format === 'waterbear' ? '生成コード（waterbear）' : '生成コード（C）'
   output.textContent = code
+
+  if (format === 'waterbear') {
+    const base = arrayName
+    usageHint.innerHTML = `
+      <p><strong>使い方</strong>（ファイル保存後）:</p>
+      <pre class="inline-cmd">waterbear assemble ${base}.s -o ${base}.vms</pre>
+      <p>
+        アセンブラ:
+        <a href="https://wtetzner.github.io/waterbear" target="_blank" rel="noopener noreferrer">waterbear</a>
+         /
+        <a href="https://github.com/wtetzner/waterbear/releases" target="_blank" rel="noopener noreferrer">ダウンロード</a>
+        。起動時に自動再生。DreamPotato（スタンドアロン）で <strong>A=再再生 / B=停止 / MODE=終了</strong>。再生中は LCD に表示します。
+      </p>
+    `
+    usageHint.classList.remove('hidden')
+  } else {
+    usageHint.innerHTML = ''
+    usageHint.classList.add('hidden')
+  }
+
   outputSection.classList.remove('hidden')
   copyBtn.disabled = currentPairs.length === 0
+  downloadBtn.disabled = currentPairs.length === 0
   playBtn.disabled = currentPairs.length === 0
 
   const track = tracks.find((t) => t.index === trackIndex)
@@ -141,6 +190,7 @@ async function loadFile(file: File) {
       options.classList.add('hidden')
       outputSection.classList.add('hidden')
       copyBtn.disabled = true
+      downloadBtn.disabled = true
       playBtn.disabled = true
       return
     }
@@ -223,6 +273,7 @@ dropzone.addEventListener('drop', (e) => {
 
 trackSelect.addEventListener('change', regenerate)
 arrayNameInput.addEventListener('input', regenerate)
+formatSelect.addEventListener('change', regenerate)
 
 playBtn.addEventListener('click', () => {
   if (preview.isPlaying) {
@@ -264,4 +315,20 @@ copyBtn.addEventListener('click', async () => {
   } catch {
     showError('クリップボードへのコピーに失敗しました。')
   }
+})
+
+downloadBtn.addEventListener('click', () => {
+  const text = output.textContent ?? ''
+  if (!text) return
+  const format = currentFormat()
+  const base = sanitizeArrayName(arrayNameInput.value)
+  const filename = format === 'waterbear' ? `${base}.s` : `${base}.c`
+  const mime = format === 'waterbear' ? 'text/plain' : 'text/x-c'
+  const blob = new Blob([text], { type: `${mime};charset=utf-8` })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
 })

@@ -9,16 +9,23 @@ npm install
 npm run dev
 ```
 
-ブラウザで MIDI（`.mid` / `.midi`）をアップロードすると、次のようなコードが生成されます。
+ブラウザで MIDI（`.mid` / `.midi`）をアップロードすると、C配列または **waterbear 用の完成プログラム（`.s`）** が生成されます。
 
-```c
-// [周波数(Hz), 発音時間(ミリ秒)] のペアの配列
-uint16_t vmu_melody[] = {
-    261, 500,  // ド (C4) を500ms
-    293, 500,  // レ (D4) を500ms
-    0,   500,  // 休符 を500ms
-};
+waterbear 出力には SFR定義・再生ルーチン・メロディ表が含まれます。
+
+```bash
+waterbear assemble vmu_melody.s -o vmu_melody.vms
 ```
+
+アセンブラの入手・使い方は [waterbear](https://wtetzner.github.io/waterbear) を参照してください（[Releases](https://github.com/wtetzner/waterbear/releases)）。
+
+生成した `.vms` を [DreamPotato](https://github.com/RikkiGibson/DreamPotato)（スタンドアロン）で開けば音を確認できます。
+
+- 起動時に自動再生
+- **A** … 再再生
+- **B** … 停止
+- **MODE** … BIOS に戻る
+- 再生中は LCD にイコライザ風の画面＋ピッチバーを表示
 
 ## ビルド
 
