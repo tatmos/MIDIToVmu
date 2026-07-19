@@ -28,6 +28,8 @@ npm run build
 
 `dist/` を静的ホスティングに配置できます。処理はすべてブラウザ内で完結します。
 
+サンプル MIDI: `public/samples/nandodemo.mid`（画面の「サンプルを読み込む」からも利用可）
+
 ## GitHub Pages
 
 `main` への push で GitHub Actions が自動デプロイします。

@@ -101,6 +101,11 @@ header p {
   cursor: pointer;
 }
 
+.sample-row {
+  margin: 0.85rem 0 0;
+  text-align: center;
+}
+
 .panel {
   margin-top: 1.25rem;
   padding: 1rem 1.15rem;
@@ -168,6 +173,12 @@ input[type='text'] {
   font-weight: 600;
 }
 
+.output-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 button {
   font: inherit;
   font-size: 0.875rem;
@@ -192,6 +203,23 @@ button:disabled {
 
 button.copied {
   background: #2a7a4a;
+}
+
+button.secondary {
+  color: var(--ink);
+  background: #dce6ec;
+}
+
+button.secondary:hover {
+  background: #c8d5de;
+}
+
+button.playing {
+  background: #8a5a20;
+}
+
+button.playing:hover {
+  background: #6e4818;
 }
 
 pre {

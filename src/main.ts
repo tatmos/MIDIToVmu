@@ -4,8 +4,10 @@ import {
   listTracks,
   melodyToCSource,
   parseMidiFile,
+  type MelodyPair,
   type TrackInfo,
 } from './midiToVmu'
+import { MelodyPreview } from './preview'
 import type { Midi } from '@tonejs/midi'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
@@ -21,6 +23,10 @@ app.innerHTML = `
     <span>またはクリックして選択（.mid / .midi）</span>
     <input type="file" id="file" accept=".mid,.midi,audio/midi,audio/x-midi" />
   </div>
+
+  <p class="sample-row">
+    <button type="button" id="sample" class="secondary">サンプルを読み込む（nandodemo.mid）</button>
+  </p>
 
   <div class="panel hidden" id="options">
     <div class="controls">
@@ -41,18 +47,24 @@ app.innerHTML = `
   <div class="hidden" id="outputSection">
     <div class="output-header">
       <h2>生成コード</h2>
-      <button type="button" id="copy" disabled>コピー</button>
+      <div class="output-actions">
+        <button type="button" id="play" disabled>プレビュー再生</button>
+        <button type="button" id="stop" class="secondary" disabled>停止</button>
+        <button type="button" id="copy" disabled>コピー</button>
+      </div>
     </div>
     <pre id="output"></pre>
   </div>
 
   <footer>
     単音メロディ想定。重なるノートは開始が早いものを優先し、次のノート開始で打ち切ります。
+    プレビューはブラウザ上の矩形波で、実機VMUの音質とは異なります。
   </footer>
 `
 
 const dropzone = document.querySelector<HTMLDivElement>('#dropzone')!
 const fileInput = document.querySelector<HTMLInputElement>('#file')!
+const sampleBtn = document.querySelector<HTMLButtonElement>('#sample')!
 const options = document.querySelector<HTMLDivElement>('#options')!
 const trackSelect = document.querySelector<HTMLSelectElement>('#track')!
 const arrayNameInput = document.querySelector<HTMLInputElement>('#arrayName')!
@@ -61,10 +73,15 @@ const errorEl = document.querySelector<HTMLDivElement>('#error')!
 const outputSection = document.querySelector<HTMLDivElement>('#outputSection')!
 const output = document.querySelector<HTMLPreElement>('#output')!
 const copyBtn = document.querySelector<HTMLButtonElement>('#copy')!
+const playBtn = document.querySelector<HTMLButtonElement>('#play')!
+const stopBtn = document.querySelector<HTMLButtonElement>('#stop')!
+
+const preview = new MelodyPreview()
 
 let currentMidi: Midi | null = null
 let currentFileName = ''
 let tracks: TrackInfo[] = []
+let currentPairs: MelodyPair[] = []
 
 function showError(message: string) {
   errorEl.textContent = message
@@ -76,20 +93,30 @@ function clearError() {
   errorEl.classList.add('hidden')
 }
 
+function setPlayingUi(playing: boolean) {
+  playBtn.classList.toggle('playing', playing)
+  playBtn.textContent = playing ? '再生中…' : 'プレビュー再生'
+  stopBtn.disabled = !playing
+}
+
 function regenerate() {
   if (!currentMidi || tracks.length === 0) return
 
+  preview.stop()
+  setPlayingUi(false)
+
   const trackIndex = Number(trackSelect.value)
   const arrayName = sanitizeArrayName(arrayNameInput.value)
-  const pairs = convertTrack(currentMidi, trackIndex)
-  const code = melodyToCSource(pairs, arrayName)
+  currentPairs = convertTrack(currentMidi, trackIndex)
+  const code = melodyToCSource(currentPairs, arrayName)
 
   output.textContent = code
   outputSection.classList.remove('hidden')
-  copyBtn.disabled = pairs.length === 0
+  copyBtn.disabled = currentPairs.length === 0
+  playBtn.disabled = currentPairs.length === 0
 
   const track = tracks.find((t) => t.index === trackIndex)
-  meta.textContent = `${currentFileName} / ${track?.name ?? ''} — ノート ${track?.noteCount ?? 0} → ペア ${pairs.length}`
+  meta.textContent = `${currentFileName} / ${track?.name ?? ''} — ノート ${track?.noteCount ?? 0} → ペア ${currentPairs.length}`
 }
 
 function sanitizeArrayName(raw: string): string {
@@ -101,16 +128,20 @@ function sanitizeArrayName(raw: string): string {
 
 async function loadFile(file: File) {
   clearError()
+  preview.stop()
+  setPlayingUi(false)
   try {
     currentMidi = await parseMidiFile(file)
     currentFileName = file.name
     tracks = listTracks(currentMidi)
 
     if (tracks.length === 0) {
+      currentPairs = []
       showError('ノートを含むトラックが見つかりませんでした。')
       options.classList.add('hidden')
       outputSection.classList.add('hidden')
       copyBtn.disabled = true
+      playBtn.disabled = true
       return
     }
 
@@ -126,6 +157,7 @@ async function loadFile(file: File) {
   } catch (err) {
     currentMidi = null
     tracks = []
+    currentPairs = []
     options.classList.add('hidden')
     outputSection.classList.add('hidden')
     showError(
@@ -149,6 +181,27 @@ fileInput.addEventListener('change', () => {
   if (file) void loadFile(file)
 })
 
+sampleBtn.addEventListener('click', async () => {
+  clearError()
+  sampleBtn.disabled = true
+  try {
+    const url = `${import.meta.env.BASE_URL}samples/nandodemo.mid`
+    const res = await fetch(url)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const buffer = await res.arrayBuffer()
+    const file = new File([buffer], 'nandodemo.mid', { type: 'audio/midi' })
+    await loadFile(file)
+  } catch (err) {
+    showError(
+      err instanceof Error
+        ? `サンプルの読み込みに失敗しました: ${err.message}`
+        : 'サンプルの読み込みに失敗しました。',
+    )
+  } finally {
+    sampleBtn.disabled = false
+  }
+})
+
 ;['dragenter', 'dragover'].forEach((ev) => {
   dropzone.addEventListener(ev, (e) => {
     e.preventDefault()
@@ -170,6 +223,32 @@ dropzone.addEventListener('drop', (e) => {
 
 trackSelect.addEventListener('change', regenerate)
 arrayNameInput.addEventListener('input', regenerate)
+
+playBtn.addEventListener('click', () => {
+  if (preview.isPlaying) {
+    preview.stop()
+    setPlayingUi(false)
+    return
+  }
+  if (currentPairs.length === 0) return
+  clearError()
+  void preview
+    .play(currentPairs, () => setPlayingUi(false))
+    .then(() => setPlayingUi(true))
+    .catch((err: unknown) => {
+      setPlayingUi(false)
+      showError(
+        err instanceof Error
+          ? `再生に失敗しました: ${err.message}`
+          : '再生に失敗しました。',
+      )
+    })
+})
+
+stopBtn.addEventListener('click', () => {
+  preview.stop()
+  setPlayingUi(false)
+})
 
 copyBtn.addEventListener('click', async () => {
   const text = output.textContent ?? ''
